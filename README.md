@@ -1,6 +1,6 @@
 # BendersDecomposition
 
-This is a benders decomposition implementation in Python using Gurobi for solving the Uncapacitated Facility Location (UFL) Problem. The classic Benders partitioning method solves two problems namely, masters problem and sub problem to get the UB and LB respectively (for the maximization problem). The sub problem provides cut to strengthen the lower bound in each iteration.
+This is a benders decomposition implementation in Python using Gurobi for solving the Uncapacitated Facility Location (UFL) Problem. The classic Benders partitioning method solves two problems namely, masters problem and sub problem to get the UB and LB respectively (for the maximization problem). The sub problem provides cut to strengthen the lower bound in each iteration. To read more about this method, please refer to Prof. Rubin's [blog]{https://orinanobworld.blogspot.com/2011/10/benders-decomposition-then-and-now.html}.
 
 ## Uncapacitated Facility Location Problem (UFL)
 *Given*: n facilities and m customers, profit matrix of assigning a customer to facility and cost matrix of opening a new facility.
@@ -16,8 +16,9 @@ s.t.          \sum_{j \in F} y_{ij} = 1, \forall i \in C
               0 <= y_{ij} <= x_j, \forall i \in C, \forall j in F
               x binary, y continuous
 ```
-## Uncapacitated Facility Location Problem (UFL)
-The script generates random data for profit matrix and cost vector. 
+## Information about Different Scripts
+### bendersClassic.py
+The script generates random data for profit matrix and cost vector and program the classic Benders Decomposition.
 
 ```
 solveUFL(tol, x_initial, maxIter, verbose)
