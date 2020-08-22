@@ -33,8 +33,8 @@ def generateFacilityLocationData(C, F):
 
 
 # Step 1: Initialize variables
-C = 50
-F = 10
+C = 100
+F = 30
 
 
 
@@ -118,44 +118,42 @@ def subProblem(x):
 
 def setupMasterProblemModel():
     m = Model()
-    eta =  m.addVar(vtype=GRB.CONTINUOUS)
-    x = {j: m.addVar(lb=0, vtype=GRB.BINARY) for j in range(F)}
+    eta =  m.addVar(vtype=GRB.CONTINUOUS, name ='eta')
+    x = {j: m.addVar(lb=0, vtype=GRB.BINARY, name = str(j)) for j in range(F)}
     
     m.setObjective(eta -sum([f[j] * x[j] for j in range(F)]), sense=GRB.MAXIMIZE)
     m.update()
     m.Params.OutputFlag = 0
+    return m
 
-def solveMaster(optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu, xhat):
-    m = Model()
-    eta =  m.addVar(vtype=GRB.CONTINUOUS)
-    x = {j: m.addVar(lb=0, vtype=GRB.BINARY) for j in range(F)}
+def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
+
     '''
-    Adding optimality cuts
+    Adding optimality cut
     '''
     
-    for k in range(len(optCuts_mu)):
-        tot = sum(optCuts_mu[k].values())
-
+    if len(optCuts_nu) != 0:            
+        tot = sum(optCuts_mu.values())    
         for j in range(F):
             for i in range(C):
-                tot += optCuts_nu[k][i, j]*x[j]
-
-        m.addConstr(eta <= tot)
+                tot += optCuts_nu[i, j]*m.getVarByName(str(j))
+    
+        m.addConstr(m.getVarByName('eta') <= tot)
     '''
-    Adding feasibility cuts
+    Adding feasibility cut
     '''
-    for k in range(len(fesCuts_mu)):
-        tot = sum(fesCuts_mu[k].values())
+    if len(fesCuts_mu) != 0:            
+        tot = sum(fesCuts_mu.values())
         for j in range(F):
             for i in range(C):
-                tot += fesCuts_nu[k][i, j] * x[j]
+                tot += fesCuts_nu[i, j] * m.getVarByName(str(j))
         m.addConstr(tot >= 0)
-        
+    
 
     
     m.optimize()
     if m.status == GRB.OPTIMAL:
-        return m.objVal, [x[k].x for k in range(F)], eta.x
+        return m.objVal, [m.getVarByName(str(k)).x for k in range(F)], m.getVarByName('eta'), m
     else:
         print("Sth went wrong in the master problem and it is ", m.status)
 
@@ -173,19 +171,18 @@ def solveUFL(eps, x_initial, maxit, verbose=0):
     tol = float("inf")
     it = 0
     x = x_initial
+    m = setupMasterProblemModel()
 
     while eps < tol  and it < maxit :
         ob, mu, nu, y, status = subProblem(x)
         LB = max(LB, ob)
         if status == 2:
             #print(status, "optimality")
-            optCuts_mu.append(mu)
-            optCuts_nu.append(nu)
+            obj, x, eta, m = solveMaster(m, mu, nu, [], [])
         else:
             #print(status, "feasibility")
-            fesCuts_mu.append(mu)
-            fesCuts_nu.append(nu)
-        obj, x, eta = solveMaster(optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu, x)
+            obj, x, eta, m = solveMaster(m,  [], [], mu, nu)
+        
         UB = min(UB, obj)
 
         tol = UB - LB
@@ -233,7 +230,7 @@ x_initial = np.zeros(F)
 x_initial[1] = 1
 x_initial[2] = 0
 start = time.time()
-xb, yb = solveUFL(100, x_initial, 1000, 1)
+xb, yb = solveUFL(100, x_initial, 1000, 0)
 print("Benders took...", round(time.time() - start, 2), "seconds")
 start = time.time()
 obg, xg, yg = solveModelGurobi()
