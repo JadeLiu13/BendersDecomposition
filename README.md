@@ -51,7 +51,7 @@ for solving the problem using Benders Decomposition. It returns the optimal valu
  Although the callback procedure performs better than the classic approach, you will observe that both these methods cannot beat the Gurobi Solver in CPU time.
  
  ### 3. bendersDisaggregatedCuts.py
- By fixing the solution of the variables related to which fcacilities to open, we obtain the Benders subproblme. This benders subproblem can be further decomposed for each customer. Therefore, multiple disaggregated cuts (for each customer) can be added to the master problem after solving the subproblem. This script codes above two classic  procedures with disaggregated cuts.  
+ By fixing the solution of the variables related to which fcacilities to open, we obtain the Benders subproblme. This benders subproblem can be further decomposed for each customer. Therefore, multiple disaggregated cuts (for each customer) can be added to the master problem after solving the subproblem. This script codes above two classic  procedures with disaggregated cuts.  Read more [here](https://orinanobworld.blogspot.com/2012/09/separable-benders-decomposition.html)
  
  
  ```
