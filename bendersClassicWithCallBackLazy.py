@@ -22,7 +22,7 @@ import time
 
 def generateFacilityLocationData(C, F):
     # Unbounded ray instance seed 159
-    np.random.seed(15645)
+    np.random.seed(3501)
     p =  np.random.randint(1000, size=(C, F))
     f = np.random.randint(1000, size=(F))
     for j in range(F):
@@ -34,7 +34,7 @@ def generateFacilityLocationData(C, F):
 
 # Step 1: Initialize variables
 C = 100
-F = 5
+F = 10
 
 
 
@@ -58,11 +58,9 @@ def solveModelGurobi():
     for j in range(F):
         for i in range(C):
             m2.addConstr(y[i, j] <= bigM*x[j])
-    obj = 0
-    for j in range(F):
-        obj = obj -f[j] * x[j]
-        for i in range(C):
-            obj += p[i, j] * y[i, j]
+    
+    obj = sum([p[i, j] * y[i, j]  for j in range(F) for i in range(C)]) -sum([f[j] * x[j] for j in range(F)])
+
     m2.setObjective(obj, sense=GRB.MAXIMIZE)
     m2.update()
     m2.Params.OutputFlag = 0
@@ -107,43 +105,18 @@ def subProblem(x):
     else:
         mu = {}
         nu = {}
-
         for i in range(C):
             mu[i] = constrMu[i].FarkasDual
         for j in range(F):
             for i in range(C):
                 nu[i, j] = constrNu[i, j].FarkasDual
-                ind += 1
         return -float("inf"), mu, nu, [], m1.status
     
     
-def subtourelim(model, where):
-    if where == GRB.Callback.MIPSOL:
-        # make a list of edges selected in the solution
-        vals = model.cbGetSolution(model._vars)
-        selected = gp.tuplelist((i, j) for i, j in model._vars.keys()
-                                if vals[i, j] > 0.5)
-        # find the shortest cycle in the selected edge list
-        tour = subtour(selected)
 
-
-        if len(tour) < n:
-            # add subtour elimination constr. for every pair of cities in tour
-            model.cbLazy(gp.quicksum(model._vars[i, j]
-                                     for i, j in combinations(tour, 2))
-                         <= len(tour)-1)
             
             
-def setupMasterProblemModel():
-    m = Model()
-    eta =  m.addVar(vtype=GRB.CONTINUOUS, name ='eta')
-    x = {j: m.addVar(lb=0, vtype=GRB.BINARY, name = str(j)) for j in range(F)}
-    
-    m.setObjective(eta -sum([f[j] * x[j] for j in range(F)]), sense=GRB.MAXIMIZE)
-    m.update()
-    m.Params.OutputFlag = 0
-    m.Params.lazyConstraints = 1
-    return m
+
 
 def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
 
@@ -161,12 +134,12 @@ def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
     '''
     Adding feasibility cut
     '''
-    if len(fesCuts_mu) != 0:            
+    if len(fesCuts_mu) != 0: 
         tot = sum(fesCuts_mu.values())
         for j in range(F):
             for i in range(C):
                 tot += fesCuts_nu[i, j] * m.getVarByName(str(j))* bigM
-        m.addLazy (tot >= 0)
+        m.addConstr (tot >= 0)
     
 
     
@@ -174,13 +147,54 @@ def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
     if m.status == GRB.OPTIMAL:
         return m.objVal, [m.getVarByName(str(k)).x for k in range(F)], m.getVarByName('eta'), m
     else:
-        print("Sth went wrong in the master problem and it is ", m.status)
+        print("Original model is infeasible", m.status)
 
 
+def setupMasterProblemModel():
+    m = Model()
+    eta =  m.addVar(vtype=GRB.CONTINUOUS, ub = 1e5, name ='eta')
+    x = {j: m.addVar(lb=0, vtype=GRB.BINARY, name = str(j)) for j in range(F)}
+    
+    m.setObjective(eta -sum([f[j] * x[j] for j in range(F)]), sense=GRB.MAXIMIZE)
+    m.update()
+    m.Params.OutputFlag = 0
+    m.Params.lazyConstraints = 1
+    return m
 
 
+def callBackFunction(model, where):
+    if where == GRB.Callback.MIPSOL: 
+        xHat = [model.cbGetSolution(model.getVarByName(str(k))) for k in range(F)]
+        UB = model.cbGet(GRB.Callback.MIPSOL_OBJ)
+        LB, mu, nu, y, status = subProblem(xHat)
+       
+        if status == 3:
+            tot = sum(mu.values())
+            for j in range(F):
+                for i in range(C):
+                    tot += nu[i, j] * model.getVarByName(str(j))* bigM
+            model.cbLazy(tot >= 0)
+            
+            
+            
+        if status == 2:            
+            if round(LB) != round(UB):                    
+                tot = sum(mu.values())  
+                for j in range(F):
+                    for i in range(C):
+                        tot += nu[i, j]*model.getVarByName(str(j))*bigM  
+                model.cbLazy(model.getVarByName('eta') <= tot)
+            else:
+                pass
+                
+                
 
-def solveUFL(eps, x_initial, maxit, verbose=0):
+                #model.terminate()      
+            
+       
+        
+
+def solveUFLBenders(eps, x_initial, maxit, verbose=0):
     UB = float("inf")
     LB = -float("inf")
     optCuts_mu = []
@@ -189,25 +203,22 @@ def solveUFL(eps, x_initial, maxit, verbose=0):
     fesCuts_nu = []
     tol = float("inf")
     it = 0
-    x = x_initial
+    x = x_initial    
     m = setupMasterProblemModel()
-
     while eps < tol  and it < maxit :
         ob, mu, nu, y, status = subProblem(x)
         LB = max(LB, ob)
         if status == 2:
-            #print(status, "optimality")
             obj, x, eta, m = solveMaster(m, mu, nu, [], [])
         else:
-            #print(status, "feasibility")
-            obj, x, eta, m = solveMaster(m,  [], [], mu, nu)
-        
-        UB = min(UB, obj)
-
+            obj, x, eta, m = solveMaster(m,  [], [], mu, nu)        
+        #UB = min(UB, obj)
+        UB = obj
         tol = UB - LB
         it += 1
+
         if verbose == 1:            
-            print('----------------------iteration '  + str(it) +'-------------------' )
+            print('---------------------- iteration '  + str(it) +' -------------------' )
             print ('LB = ', LB, ', UB = ', UB, ', tol = ', tol)
             if len([k for k in range(F) if round(x[k]) != 0]) != 0:
                 print('Opened Facilities: \t ', [k for k in range(F) if round(x[k]) != 0])
@@ -223,8 +234,19 @@ def solveUFL(eps, x_initial, maxit, verbose=0):
             '''
         else:
             continue
-    return x, y
+    return x, y, LB
 
+def runCallBackBenders():
+    m = setupMasterProblemModel()
+    m.optimize(callBackFunction)
+    x = [m.getVarByName(str(j)).x for j in range(F)]
+    ob, mu, nu, y, status = subProblem(x)
+    if round(ob) == round(m.ObjVal):
+        return x, y, m.ObjVal
+    else:
+        print('Callback procedure failed')
+        print ('LB = ', ob, ', UB = ', m.ObjVal)
+        return x, y, m.ObjVal
 
 def checkGurobiBendersSimilarity(xb, yb, xg, yg):
 
@@ -245,13 +267,21 @@ def checkGurobiBendersSimilarity(xb, yb, xg, yg):
 
 
 bigM = 1
-x_initial = np.zeros(F)
+x_initial = np.ones(F)
 x_initial[1] = 1
 x_initial[2] = 0
 start = time.time()
-xb, yb = solveUFL(100, x_initial, 1000, 1)
-print("Benders took...", round(time.time() - start, 2), "seconds")
+xb, yb, obb = solveUFLBenders(0, x_initial, 1000, 0)
+print("Classic Benders took...", round(time.time() - start, 2), "seconds")
 start = time.time()
+xc, yc, obcb = runCallBackBenders()  
+print("Classic Benders took with callbacks took...", round(time.time() - start, 2), "seconds")
+
+start = time.time()
+
 obg, xg, yg = solveModelGurobi()
 print("Gurobi took...", round(time.time() - start, 2), "seconds")
 checkGurobiBendersSimilarity(xb, yb, xg, yg)
+
+
+
