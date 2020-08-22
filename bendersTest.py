@@ -33,8 +33,8 @@ def generateFacilityLocationData(C, F):
 
 
 # Step 1: Initialize variables
-C = 100
-F = 50
+C = 50
+F = 10
 
 
 
@@ -46,6 +46,7 @@ C, F, p, f = generateFacilityLocationData(C,F)
 ############################################################################################################################
 ##############################################################################################################################
 
+    
 
 
 def solveModelGurobi():
@@ -115,6 +116,14 @@ def subProblem(x):
                 ind += 1
         return -float("inf"), mu, nu, [], m1.status
 
+def setupMasterProblemModel():
+    m = Model()
+    eta =  m.addVar(vtype=GRB.CONTINUOUS)
+    x = {j: m.addVar(lb=0, vtype=GRB.BINARY) for j in range(F)}
+    
+    m.setObjective(eta -sum([f[j] * x[j] for j in range(F)]), sense=GRB.MAXIMIZE)
+    m.update()
+    m.Params.OutputFlag = 0
 
 def solveMaster(optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu, xhat):
     m = Model()
@@ -143,9 +152,7 @@ def solveMaster(optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu, xhat):
         m.addConstr(tot >= 0)
         
 
-    m.setObjective(eta -sum([f[j] * x[j] for j in range(F)]), sense=GRB.MAXIMIZE)
-    m.update()
-    m.Params.OutputFlag = 0
+    
     m.optimize()
     if m.status == GRB.OPTIMAL:
         return m.objVal, [x[k].x for k in range(F)], eta.x
@@ -156,7 +163,7 @@ def solveMaster(optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu, xhat):
 
 
 
-def solveUFL(eps, x_initial, maxit):
+def solveUFL(eps, x_initial, maxit, verbose=0):
     UB = float("inf")
     LB = -float("inf")
     optCuts_mu = []
@@ -183,19 +190,23 @@ def solveUFL(eps, x_initial, maxit):
 
         tol = UB - LB
         it += 1
-        print('----------------------iteration '  + str(it) +'-------------------' )
-        print ('LB = ', LB, ', UB = ', UB, ', tol = ', tol)
-        if len([k for k in range(F) if round(x[k]) != 0]) != 0:
-            print('Opened Facilities: \t ', [k for k in range(F) if round(x[k]) != 0])
+        if verbose == 1:            
+            print('----------------------iteration '  + str(it) +'-------------------' )
+            print ('LB = ', LB, ', UB = ', UB, ', tol = ', tol)
+            if len([k for k in range(F) if round(x[k]) != 0]) != 0:
+                print('Opened Facilities: \t ', [k for k in range(F) if round(x[k]) != 0])
+            else:
+                print('No open facilities')
+            
+            '''
+            print('Assignment....')
+            for i in range(C):
+                print('Customer \t | \t Facility')
+                print(str(i)+ '\t | \t ' + str([k for k in for j in range(F) for i in range(C) if y[0] == i and y[k] == 1][0]))
+            print(LB, UB, tol, x, it)
+            '''
         else:
-            print('No open facilities')
-        print('Assignment....')
-        '''
-        for i in range(C):
-            print('Customer \t | \t Facility')
-            print(str(i)+ '\t | \t ' + str([k for k in for j in range(F) for i in range(C) if y[0] == i and y[k] == 1][0]))
-        print(LB, UB, tol, x, it)
-        '''
+            continue
     return x, y
 
 
@@ -222,9 +233,9 @@ x_initial = np.zeros(F)
 x_initial[1] = 1
 x_initial[2] = 0
 start = time.time()
-xb, yb = solveUFL(10, x_initial, 1000)
+xb, yb = solveUFL(100, x_initial, 1000, 1)
 print("Benders took...", round(time.time() - start, 2), "seconds")
 start = time.time()
-obj, xg, yg = solveModelGurobi()
+obg, xg, yg = solveModelGurobi()
 print("Gurobi took...", round(time.time() - start, 2), "seconds")
 checkGurobiBendersSimilarity(xb, yb, xg, yg)
