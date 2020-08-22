@@ -2,7 +2,7 @@
 
 This is a benders decomposition implementation in Python using Gurobi for solving the Uncapacitated Facility Location (UFL) Problem. The classic Benders partitioning method solves two problems namely, masters problem and sub problem to get the UB and LB respectively (for the maximization problem). The sub problem provides cut to strengthen the lower bound in each iteration. To read more about this method, please refer to [Prof. Rubin's blog](https://orinanobworld.blogspot.com/2011/10/benders-decomposition-then-and-now.html).
 
-## 1. Uncapacitated Facility Location Problem (UFL)
+## Uncapacitated Facility Location Problem (UFL)
 *Given*: n facilities and m customers, profit matrix of assigning a customer to facility and cost matrix of opening a new facility.
 
 *Variables*: Which facilities to open (x binary) and which facility to assign to each customer (y continuous).
@@ -17,7 +17,7 @@ s.t.          \sum_{j \in F} y_{ij} = 1, \forall i \in C
               x binary, y continuous
 ```
 ## Information about Different Scripts
-### 2. bendersClassic.py
+### 1. bendersClassic.py
 The script generates random data for profit matrix and cost vector and program the classic Benders Decomposition. The explaination of some of the methods is given below:
 
 ```
@@ -39,7 +39,7 @@ for solving the problem using Benders Decomposition. It returns the optimal valu
 ```
  You can also solve the model using Gurobi using this function. It returns the optimal value of the decision variables as well as the optimal objective value.
  
- ### bendersClassicWithCallBackLazy.py
+ ### 2. bendersClassicWithCallBackLazy.py
  This script adds another function over on top of functions in bendersClassic.py. This new function is called 'runCallBackBenders'. The classic Benders Decomposition requires solving the Master Problem from scratch every time a new cut is added. The callback procedure adds a lazy cut and continue the branch and bound tree. Once a feasible solution is found then the bounds are checked. To read more about this procedure, please refer to [Prof. Rubin's blog](https://orinanobworld.blogspot.com/2011/10/benders-decomposition-then-and-now.html). 
  
  
@@ -51,4 +51,4 @@ for solving the problem using Benders Decomposition. It returns the optimal valu
  Although the callback procedure performs better than the classic approach, you will observe that both these methods cannot beat the Gurobi Solver in CPU time.
  
  ### 3. bendersDisaggregatedCuts.py
- 
+ By fixing the solution of the variables related to which fcacilities to open, we obtain the Benders subproblme. This benders subproblem can be further decomposed for each customer. Therefore, multiple disaggregated cuts (for each customer) can be added to the master problem after solving the subproblem. This scripts codes above two classic Benders and Classic Benders with callback procedure with disaggregated cuts.  
