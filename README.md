@@ -20,10 +20,10 @@ s.t.          \sum_{j \in F} y_{ij} = 1, \forall i \in C
 ### bendersClassic.py
 The script generates random data for profit matrix and cost vector and program the classic Benders Decomposition. The explaination of some of the methods is given below:
 
-1.```
-solveUFL(tol, x_initial, maxIter, verbose)
 ```
-
+1. solveUFLBenders(tol, x_initial, maxIter, verbose)
+```
+for solving the problem using Benders Decomposition. It returns the optimal value of the decision variables as well as the optimal objective value.
 
  - *tol* tolerance between the upper bound and lower bound
  
@@ -32,4 +32,10 @@ solveUFL(tol, x_initial, maxIter, verbose)
  - *maxIter* Maximum no. of iterations allowed before the method fail to converge
  
  - *verbose* the value 1 prints the details of the convergence
+ 
+ 
+```
+2. solveModelGurobi()
+```
+ You can also solve the model using Gurobi using this function. It returns the optimal value of the decision variables as well as the optimal objective value.
  
