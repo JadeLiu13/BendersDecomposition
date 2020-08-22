@@ -15,11 +15,13 @@ This is a benders decomposition implementation in Python using Gurobi for solvin
 The script generates random data for profit matrix and cost vector. 
 
 ```
-solveUFL(tol, x_initial, maxIter)
+solveUFL(tol, x_initial, maxIter, verbose)
 ```
  - *tol* tolerance between the upper bound and lower bound
  
  - *x_initial* is the initial value of x variables (master problem variables)
  
  - *maxIter* Maximum no. of iterations allowed before the method fail to converge
+ 
+ - *verbose* the value 1 prints the details of the convergence
  
