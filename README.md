@@ -39,3 +39,11 @@ for solving the problem using Benders Decomposition. It returns the optimal valu
 ```
  You can also solve the model using Gurobi using this function. It returns the optimal value of the decision variables as well as the optimal objective value.
  
+ ### bendersClassicWithCallBackLazy.py
+ This script adds another function over on top of functions in bendersClassic.py. This new function is called 'runCallBackBenders'. The classic Benders Decomposition requires solving the Master Problem from scratch every time a new cut is added. The callback procedure adds a lazy cut and continue the branch and bound tree. Once a feasible solution is found then the bounds are checked. To read more about this procedure, please refer to [Prof. Rubin's blog](https://orinanobworld.blogspot.com/2011/10/benders-decomposition-then-and-now.html). Run the following method.
+ 
+ ```
+1. runCallBackBenders()  
+```
+ 
+ It also returns the optimal value of the decision variables as well as the optimal objective value.
