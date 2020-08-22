@@ -205,7 +205,7 @@ def solveUFLBenders(eps, x_initial, maxit, verbose=0):
             '''
         else:
             continue
-    return x, y
+    return x, y, UB
 
 
 def checkGurobiBendersSimilarity(xb, yb, xg, yg):
@@ -231,7 +231,7 @@ x_initial = np.zeros(F)
 x_initial[1] = 1
 x_initial[2] = 0
 start = time.time()
-xb, yb = solveUFLBenders(100, x_initial, 1000, 1)
+xb, yb, obb = solveUFLBenders(100, x_initial, 1000, 1)
 print("Benders took...", round(time.time() - start, 2), "seconds")
 start = time.time()
 obg, xg, yg = solveModelGurobi()

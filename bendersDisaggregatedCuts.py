@@ -34,7 +34,7 @@ def generateFacilityLocationData(C, F):
 
 # Step 1: Initialize variables
 C = 100
-F = 10
+F = 100
 
 
 
@@ -113,33 +113,29 @@ def subProblem(x):
         return -float("inf"), mu, nu, [], m1.status
     
     
-
-            
-            
-
-
-def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
+def solveMasterAggCuts(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
 
     '''
     Adding optimality cut
     '''
     
     if len(optCuts_nu) != 0:            
-        tot = sum(optCuts_mu.values())    
-        for j in range(F):
-            for i in range(C):
-                tot += optCuts_nu[i, j]*m.getVarByName(str(j))*bigM
-    
-        m.addConstr(m.getVarByName('eta') <= tot)
+        for i in range(C):
+            tot = optCuts_mu[i]
+            for j in range(F): 
+                tot += optCuts_nu[i, j]*m.getVarByName(str(j))*bigM    
+            m.addConstr(m.getVarByName('eta_' + str(i)) <= tot)
     '''
     Adding feasibility cut
     '''
-    if len(fesCuts_mu) != 0: 
-        tot = sum(fesCuts_mu.values())
-        for j in range(F):
-            for i in range(C):
-                tot += fesCuts_nu[i, j] * m.getVarByName(str(j))* bigM
-        m.addConstr (tot >= 0)
+    if len(fesCuts_mu) != 0:        
+        for i in range(C):
+            tot = fesCuts_mu[i]
+            for j in range(F): 
+                tot += fesCuts_nu[i, j]*m.getVarByName(str(j))*bigM    
+            m.addConstr (tot >= 0)
+            
+            
     
 
     
@@ -149,13 +145,18 @@ def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
     else:
         print("Original model is infeasible", m.status)
 
+            
+            
+
+
+
 
 def setupMasterProblemModel():
-    m = Model()
-    eta =  m.addVar(vtype=GRB.CONTINUOUS, ub = 1e5, name ='eta')
+    m = Model()    
+    eta = {i: m.addVar(vtype=GRB.CONTINUOUS, ub = 1e5, name ='eta_' + str(i)) for i in range(C)}  
     x = {j: m.addVar(lb=0, vtype=GRB.BINARY, name = str(j)) for j in range(F)}
     
-    m.setObjective(eta -sum([f[j] * x[j] for j in range(F)]), sense=GRB.MAXIMIZE)
+    m.setObjective(sum([eta[i] for i in range(C)]) -sum([f[j] * x[j] for j in range(F)]), sense=GRB.MAXIMIZE)
     m.update()
     m.Params.OutputFlag = 0
     m.Params.lazyConstraints = 1
@@ -167,23 +168,26 @@ def callBackFunction(model, where):
         xHat = [model.cbGetSolution(model.getVarByName(str(k))) for k in range(F)]
         UB = model.cbGet(GRB.Callback.MIPSOL_OBJ)
         LB, mu, nu, y, status = subProblem(xHat)
-       
-        if status == 3:
-            tot = sum(mu.values())
-            for j in range(F):
-                for i in range(C):
-                    tot += nu[i, j] * model.getVarByName(str(j))* bigM
-            model.cbLazy(tot >= 0)
+        #print(LB, UB, xHat)
+        if status == 3:            
+            for i in range(C):
+                tot = mu[i]
+                for j in range(F): 
+                    tot += nu[i, j]*model.getVarByName(str(j))*bigM    
+                model.cbLazy(tot >= 0)
+            
+        
             
             
             
         if status == 2:            
-            if round(LB) != round(UB):                    
-                tot = sum(mu.values())  
-                for j in range(F):
-                    for i in range(C):
-                        tot += nu[i, j]*model.getVarByName(str(j))*bigM  
-                model.cbLazy(model.getVarByName('eta') <= tot)
+            if round(LB) != round(UB):   
+                for i in range(C):
+                    tot = mu[i]
+                    for j in range(F): 
+                        tot += nu[i, j]*model.getVarByName(str(j))*bigM    
+                    model.cbLazy(model.getVarByName('eta_' + str(i)) <= tot)
+
             else:
                 pass
                 
@@ -194,7 +198,9 @@ def callBackFunction(model, where):
        
         
 
-def solveUFLBenders(eps, x_initial, maxit, verbose=0):
+
+
+def bendersDisaggCuts(eps, x_initial, maxit, verbose=0):
     UB = float("inf")
     LB = -float("inf")
     optCuts_mu = []
@@ -209,9 +215,9 @@ def solveUFLBenders(eps, x_initial, maxit, verbose=0):
         ob, mu, nu, y, status = subProblem(x)
         LB = max(LB, ob)
         if status == 2:
-            obj, x, eta, m = solveMaster(m, mu, nu, [], [])
+            obj, x, eta, m = solveMasterAggCuts(m, mu, nu, [], [])
         else:
-            obj, x, eta, m = solveMaster(m,  [], [], mu, nu)        
+            obj, x, eta, m = solveMasterAggCuts(m,  [], [], mu, nu)        
         #UB = min(UB, obj)
         UB = obj
         tol = UB - LB
@@ -236,6 +242,10 @@ def solveUFLBenders(eps, x_initial, maxit, verbose=0):
             continue
     return x, y, LB
 
+
+
+
+
 def runCallBackBenders():
     m = setupMasterProblemModel()
     m.optimize(callBackFunction)
@@ -252,13 +262,12 @@ def checkGurobiBendersSimilarity(xb, yb, xg, yg):
 
     ind = 0
     for j in range(F):
-        if xb[j] != xg[j]:
+        if round(xb[j]) != round(xg[j]):
             ind += 1
     k = 0
     for j in range(F):
         for i in range(C):
             if yb[k] != yg[k]:
-
                 ind += 1
             k += 1
     if ind == 0:
@@ -272,11 +281,11 @@ x_initial = np.ones(F)
 x_initial[1] = 1
 x_initial[2] = 0
 start = time.time()
-xb, yb, obb = solveUFLBenders(0, x_initial, 1000, 1)
-print("Classic Benders took...", round(time.time() - start, 2), "seconds")
+xb, yb, obb = bendersDisaggCuts(0, x_initial, 1000, 0)
+print("Benders with disaggregated cuts took...", round(time.time() - start, 2), "seconds")
 start = time.time()
 xc, yc, obcb = runCallBackBenders()  
-print("Classic Benders took with callbacks took...", round(time.time() - start, 2), "seconds")
+print("Benders with disaggregated cuts and callbacks took...", round(time.time() - start, 2), "seconds")
 
 start = time.time()
 
