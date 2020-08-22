@@ -34,7 +34,7 @@ def generateFacilityLocationData(C, F):
 
 # Step 1: Initialize variables
 C = 100
-F = 30
+F = 5
 
 
 
@@ -57,7 +57,7 @@ def solveModelGurobi():
         m2.addConstr(sum([y[i, j] for j in range(F)]) == 1)
     for j in range(F):
         for i in range(C):
-            m2.addConstr(y[i, j] <= x[j])
+            m2.addConstr(y[i, j] <= bigM*x[j])
     obj = 0
     for j in range(F):
         obj = obj -f[j] * x[j]
@@ -82,7 +82,7 @@ def subProblem(x):
         constrMu[i] = m1.addConstr(sum([y[i, j] for j in range(F)]) == 1)
     for j in range(F):
         for i in range(C):
-            constrNu[i, j] = m1.addConstr(y[i, j] <= x[j])
+            constrNu[i, j] = m1.addConstr(y[i, j] <= bigM*x[j])
 
     obj = sum([p[i, j] * y[i, j]  for j in range(F) for i in range(C)]) -sum([f[j] * x[j] for j in range(F)])
 
@@ -115,7 +115,25 @@ def subProblem(x):
                 nu[i, j] = constrNu[i, j].FarkasDual
                 ind += 1
         return -float("inf"), mu, nu, [], m1.status
+    
+    
+def subtourelim(model, where):
+    if where == GRB.Callback.MIPSOL:
+        # make a list of edges selected in the solution
+        vals = model.cbGetSolution(model._vars)
+        selected = gp.tuplelist((i, j) for i, j in model._vars.keys()
+                                if vals[i, j] > 0.5)
+        # find the shortest cycle in the selected edge list
+        tour = subtour(selected)
 
+
+        if len(tour) < n:
+            # add subtour elimination constr. for every pair of cities in tour
+            model.cbLazy(gp.quicksum(model._vars[i, j]
+                                     for i, j in combinations(tour, 2))
+                         <= len(tour)-1)
+            
+            
 def setupMasterProblemModel():
     m = Model()
     eta =  m.addVar(vtype=GRB.CONTINUOUS, name ='eta')
@@ -124,6 +142,7 @@ def setupMasterProblemModel():
     m.setObjective(eta -sum([f[j] * x[j] for j in range(F)]), sense=GRB.MAXIMIZE)
     m.update()
     m.Params.OutputFlag = 0
+    m.Params.lazyConstraints = 1
     return m
 
 def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
@@ -136,7 +155,7 @@ def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
         tot = sum(optCuts_mu.values())    
         for j in range(F):
             for i in range(C):
-                tot += optCuts_nu[i, j]*m.getVarByName(str(j))
+                tot += optCuts_nu[i, j]*m.getVarByName(str(j))*bigM
     
         m.addConstr(m.getVarByName('eta') <= tot)
     '''
@@ -146,8 +165,8 @@ def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
         tot = sum(fesCuts_mu.values())
         for j in range(F):
             for i in range(C):
-                tot += fesCuts_nu[i, j] * m.getVarByName(str(j))
-        m.addConstr(tot >= 0)
+                tot += fesCuts_nu[i, j] * m.getVarByName(str(j))* bigM
+        m.addLazy (tot >= 0)
     
 
     
@@ -225,12 +244,12 @@ def checkGurobiBendersSimilarity(xb, yb, xg, yg):
         print('Solution obtained from both methods are different!!')
 
 
-
+bigM = 1
 x_initial = np.zeros(F)
 x_initial[1] = 1
 x_initial[2] = 0
 start = time.time()
-xb, yb = solveUFL(100, x_initial, 1000, 0)
+xb, yb = solveUFL(100, x_initial, 1000, 1)
 print("Benders took...", round(time.time() - start, 2), "seconds")
 start = time.time()
 obg, xg, yg = solveModelGurobi()
