@@ -16,7 +16,7 @@ s.t.          \sum_{j \in F} y_{ij} = 1, \forall i \in C
               0 <= y_{ij} <= x_j, \forall i \in C, \forall j in F
               x binary, y continuous
 ```
-## Information about Different Scripts
+## Details about various Scripts
 ### 1. bendersClassic.py
 The script generates random data for profit matrix and cost vector and program the classic Benders Decomposition. The explaination of some of the methods is given below:
 
