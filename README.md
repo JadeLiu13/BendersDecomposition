@@ -68,6 +68,6 @@ for solving the problem using Benders Decomposition. It returns the optimal valu
  solveUFLBendersPareto(tol, x_initial, maxIter, verbose)
  ```
  
- Although the acceleration may reduce the number of iterations of master problem, the compuational time of solving two subproblems will be high.
+ Although the acceleration may reduce the number of iterations of master problem, the compuational time of solving two subproblems may be high.
  
  
