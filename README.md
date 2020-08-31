@@ -62,7 +62,7 @@ for solving the problem using Benders Decomposition. It returns the optimal valu
 
 
  ### 4. bendersParetoOptimal.py
- In 1981, [Magnanti and Wong](https://pubsonline.informs.org/doi/10.1287/opre.29.3.464) proposed pareto optimal cuts to accelerate the Classic Benders Decomposition. The method requires solving another subproblem, also known as pareto subproblem to get a better cut than the original subproblem. To solve the pareto subproblem, one requires a core point or a point inside the relative interior of space of x variables. 
+ In 1981, [Magnanti and Wong](https://pubsonline.informs.org/doi/10.1287/opre.29.3.464) proposed pareto optimal cuts to accelerate the Classic Benders Decomposition. The method requires solving another subproblem, also known as pareto subproblem to get a better cut than the cut provided by the original subproblem. To solve the pareto subproblem, one requires a core point or a point inside the relative interior of space of x variables. 
  
   ```
  solveUFLBendersPareto(tol, x_initial, maxIter, verbose)
