@@ -73,6 +73,59 @@ def solveModelGurobi():
     return m2.objVal + sum([xVal[j] * f[j] for j in range(F)]), xVal, yVal
 
 
+
+def updateCorePoint(x, corePoint):
+    return [0.5*(x[j] + corePoint[j]) for j in range(F)]
+    
+    
+def paretoSubProblem(x, sigma, corePoint):
+    m1 = Model()
+    y = {(i, j):  m1.addVar(lb=0, vtype=GRB.CONTINUOUS) for i in range(C) for j in range(F)}
+    xi = m1.addVar(lb=-GRB.INFINITY, vtype=GRB.CONTINUOUS)
+    constrMu = {}
+    constrNu = {}
+    for i in range(C):
+        constrMu[i] = m1.addConstr(sum([y[i, j] for j in range(F)]) + xi == 1)
+    
+    for j in range(F):
+        for i in range(C):
+            constrNu[i, j] = m1.addConstr(y[i, j] + xi * x[j]  <= bigM*corePoint[j])
+
+    obj = sum([p[i, j] * y[i, j]  for j in range(F) for i in range(C)]) + xi *(sigma+sum([f[j] * x[j] for j in range(F)])) - sum([f[j] * x[j] for j in range(F)])
+
+    m1.setObjective(obj, sense=GRB.MAXIMIZE)
+
+    m1.update()
+    m1.Params.OutputFlag = 0
+    m1.Params.InfUnbdInfo = 1
+    m1.Params.DualReductions = 0
+
+    m1.optimize()
+
+    if m1.status == GRB.OPTIMAL:
+        mu = {}
+        nu = {}
+        for i in range(C):
+            mu[i] = constrMu[i].pi
+        for j in range(F):
+            for i in range(C):
+                nu[i, j] = constrNu[i, j].pi
+        return m1.objVal, mu, nu, [y[i, j].x for i in range(C) for j in range(F)], m1.status
+    else:
+        mu = {}
+        nu = {}
+        for i in range(C):
+            mu[i] = constrMu[i].FarkasDual
+        for j in range(F):
+            for i in range(C):
+                nu[i, j] = constrNu[i, j].FarkasDual
+        return -float("inf"), mu, nu, [], m1.status
+
+
+    
+
+
+
 def subProblem(x):
     m1 = Model()
     y = {(i, j):  m1.addVar(lb=0, vtype=GRB.CONTINUOUS) for i in range(C) for j in range(F)}
@@ -94,7 +147,6 @@ def subProblem(x):
     m1.Params.DualReductions = 0
 
     m1.optimize()
-
     if m1.status == GRB.OPTIMAL:
         mu = {}
         nu = {}
@@ -162,7 +214,7 @@ def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
 
 
 
-def solveUFLBenders(eps, x_initial, maxit, verbose=0):
+def solveUFLBendersPareto(eps, x_initial, maxit, verbose=0):
     UB = float("inf")
     LB = -float("inf")
     optCuts_mu = []
@@ -172,6 +224,7 @@ def solveUFLBenders(eps, x_initial, maxit, verbose=0):
     tol = float("inf")
     it = 0
     x = x_initial
+    cp = corePoint
     m = setupMasterProblemModel()
 
     while eps < tol  and it < maxit :
@@ -179,6 +232,8 @@ def solveUFLBenders(eps, x_initial, maxit, verbose=0):
         LB = max(LB, ob)
         if status == 2:
             #print(status, "optimality")
+            cp = updateCorePoint(x, cp)
+            obp, mu, nu, y, status = paretoSubProblem(x, ob, corePoint)
             obj, x, eta, m = solveMaster(m, mu, nu, [], [])
         else:
             #print(status, "feasibility")
@@ -208,7 +263,6 @@ def solveUFLBenders(eps, x_initial, maxit, verbose=0):
 
 
 def checkGurobiBendersSimilarity(xb, yb, xg, yg):
-
     ind = 0
     for j in range(F):
         if xb[j] != xg[j]:
@@ -227,11 +281,12 @@ def checkGurobiBendersSimilarity(xb, yb, xg, yg):
 
 bigM = 1
 x_initial = np.zeros(F)
+corePoint = np.ones(F)
 x_initial[1] = 1
-x_initial[2] = 0
+corePoint[2] = 0
 start = time.time()
-xb, yb, obb = solveUFLBenders(100, x_initial, 1000, 0)
-print("Benders took...", round(time.time() - start, 2), "seconds")
+xb, yb, obb = solveUFLBendersPareto(100, x_initial, 1000, 0)
+print("Benders with pareto Optimal cuts took ...", round(time.time() - start, 1), "seconds")
 start = time.time()
 obg, xg, yg = solveModelGurobi()
 print("Gurobi took...", round(time.time() - start, 2), "seconds")

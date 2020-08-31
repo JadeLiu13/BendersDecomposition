@@ -34,7 +34,7 @@ def generateFacilityLocationData(C, F):
 
 # Step 1: Initialize variables
 C = 100
-F = 100
+F = 10
 
 
 
@@ -246,7 +246,7 @@ def bendersDisaggCuts(eps, x_initial, maxit, verbose=0):
 
 
 
-def runCallBackBenders():
+def runCallBackBendersDisagg():
     m = setupMasterProblemModel()
     m.optimize(callBackFunction)
     x = [m.getVarByName(str(j)).x for j in range(F)]
@@ -276,7 +276,7 @@ def checkGurobiBendersSimilarity(xb, yb, xg, yg):
         print('Solution obtained from both methods are different!!')
 
 
-bigM = 1
+bigM = 100000
 x_initial = np.ones(F)
 x_initial[1] = 1
 x_initial[2] = 0
@@ -284,7 +284,7 @@ start = time.time()
 xb, yb, obb = bendersDisaggCuts(0, x_initial, 1000, 0)
 print("Benders with disaggregated cuts took...", round(time.time() - start, 2), "seconds")
 start = time.time()
-xc, yc, obcb = runCallBackBenders()  
+xc, yc, obcb = runCallBackBendersDisagg()  
 print("Benders with disaggregated cuts and callbacks took...", round(time.time() - start, 2), "seconds")
 
 start = time.time()
