@@ -11,7 +11,7 @@ This is a benders decomposition implementation in Python using Gurobi for solvin
 
 *Objective*: Maximize the profit of assigning and minimize the cost of opening new facilities.
 ```
-MAXIMIZE      \sum_{i \in C} \sum_{j \in F} p_{ij} y_{ij} - \sum_{j \in F} x_j
+MAXIMIZE      \sum_{i \in C} \sum_{j \in F} p_{ij} y_{ij} - \sum_{j \in F} c_j x_j
 s.t.          \sum_{j \in F} y_{ij} = 1, \forall i \in C
               0 <= y_{ij} <= x_j, \forall i \in C, \forall j in F
               x binary, y continuous
