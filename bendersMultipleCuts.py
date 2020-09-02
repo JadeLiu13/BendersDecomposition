@@ -263,7 +263,7 @@ def checkGurobiBendersSimilarity(xb, yb, xg, yg):
         print('Solution obtained from both methods are different!!')
 
 
-bigM = 100000
+bigM = 1
 x_initial = np.zeros(F)
 x_initial[1] = 1
 x_initial[2] = 0

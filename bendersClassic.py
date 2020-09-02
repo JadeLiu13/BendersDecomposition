@@ -34,7 +34,7 @@ def generateFacilityLocationData(C, F):
 
 # Step 1: Initialize variables
 C = 100
-F = 50
+F = 10
 
 
 
@@ -225,7 +225,7 @@ def checkGurobiBendersSimilarity(xb, yb, xg, yg):
         print('Solution obtained from both methods are different!!')
 
 
-bigM = 100000
+bigM = 1
 x_initial = np.zeros(F)
 x_initial[1] = 1
 x_initial[2] = 0
