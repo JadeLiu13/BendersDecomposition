@@ -63,11 +63,21 @@ for solving the problem using Benders Decomposition. It returns the optimal valu
 
  ### 4. bendersParetoOptimal.py
  In 1981, [Magnanti and Wong](https://pubsonline.informs.org/doi/10.1287/opre.29.3.464) proposed pareto optimal cuts to accelerate the Classic Benders Decomposition. The method requires solving another subproblem, also known as pareto subproblem to get a better cut than the cut provided by the original subproblem. To solve the pareto subproblem, one requires a core point or a point inside the relative interior of space of x variables. 
+ In 2013, [Tang et al.](https://link.springer.com/article/10.1007/s10479-011-1050-9) proposed a different way of generating high density cuts. 
+ 
  
   ```
  solveUFLBendersPareto(tol, x_initial, maxIter, verbose)
+ solveUFLBendersHighDensityPareto(tol, x_initial, maxIter, verbose)
  ```
  
  Although the acceleration may reduce the number of iterations of master problem, the compuational time of solving two subproblems may be high.
  
+  ### 5. bendersMultipleCuts.py
+  In this case, we ask GUROBI to not only return the optimal solution of the master problem but also all the feasible solutions of the master problem found along the way to the optimal solution. These multiple solutions of facilities help in solving multiple subproblems within one iteration of the master problem and generate multiple cuts.
+
+  ```
+ solveUFLBendersMultipleCuts(tol, x_initial, maxIter, verbose)
+ ```
  
+ This method significantly reduces the number of master problem iterations but with increasing number of cuts, the master problem takes longer time to solve. 

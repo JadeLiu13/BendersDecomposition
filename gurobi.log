@@ -461,3 +461,264 @@ Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
 Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
 Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
 Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter PoolSolutions to 1024
+   Prev: 10  Min: 1  Max: 2000000000  Default: 10
+Changed value of parameter PoolGap to 0.1
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Changed value of parameter PoolSearchMode to 2
+   Prev: 0  Min: 0  Max: 2  Default: 0
+Optimize a model with 1 rows, 10 columns and 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 2e+01]
+  Objective range  [1e+00, 3e+01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e+01, 3e+01]
+Found heuristic solution: objective 65.0000000
+Presolve time: 0.00s
+Presolved: 1 rows, 10 columns, 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+
+Root relaxation: objective 6.587500e+01, 1 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   65.87500    0    1   65.00000   65.87500  1.35%     -    0s
+Optimal solution found at node 0 - now completing solution pool...
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     2   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+
+Cutting planes:
+  Cover: 1
+
+Explored 72 nodes (46 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 21: 65 65 64 ... 59
+No other solutions better than -1e+100
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.500000000000e+01, best bound 6.500000000000e+01, gap 0.0000%
+Changed value of parameter PoolSolutions to 1024
+   Prev: 10  Min: 1  Max: 2000000000  Default: 10
+Changed value of parameter PoolGap to 0.1
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Changed value of parameter PoolSearchMode to 2
+   Prev: 0  Min: 0  Max: 2  Default: 0
+Optimize a model with 1 rows, 10 columns and 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 2e+01]
+  Objective range  [1e+00, 3e+01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e+01, 3e+01]
+Found heuristic solution: objective 65.0000000
+Presolve time: 0.00s
+Presolved: 1 rows, 10 columns, 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+
+Root relaxation: objective 6.587500e+01, 1 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   65.87500    0    1   65.00000   65.87500  1.35%     -    0s
+Optimal solution found at node 0 - now completing solution pool...
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     2   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+
+Cutting planes:
+  Cover: 1
+
+Explored 72 nodes (46 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 21: 65 65 64 ... 59
+No other solutions better than -1e+100
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.500000000000e+01, best bound 6.500000000000e+01, gap 0.0000%
+Changed value of parameter PoolSolutions to 1024
+   Prev: 10  Min: 1  Max: 2000000000  Default: 10
+Changed value of parameter PoolGap to 0.1
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Changed value of parameter PoolSearchMode to 2
+   Prev: 0  Min: 0  Max: 2  Default: 0
+Optimize a model with 1 rows, 10 columns and 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 2e+01]
+  Objective range  [1e+00, 3e+01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e+01, 3e+01]
+Found heuristic solution: objective 65.0000000
+Presolve time: 0.00s
+Presolved: 1 rows, 10 columns, 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+
+Root relaxation: objective 6.587500e+01, 1 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   65.87500    0    1   65.00000   65.87500  1.35%     -    0s
+Optimal solution found at node 0 - now completing solution pool...
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     2   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+
+Cutting planes:
+  Cover: 1
+
+Explored 72 nodes (46 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 21: 65 65 64 ... 59
+No other solutions better than -1e+100
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.500000000000e+01, best bound 6.500000000000e+01, gap 0.0000%
+Changed value of parameter PoolSolutions to 1024
+   Prev: 10  Min: 1  Max: 2000000000  Default: 10
+Changed value of parameter PoolGap to 0.1
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Changed value of parameter PoolSearchMode to 2
+   Prev: 0  Min: 0  Max: 2  Default: 0
+Optimize a model with 1 rows, 10 columns and 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 2e+01]
+  Objective range  [1e+00, 3e+01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e+01, 3e+01]
+Found heuristic solution: objective 65.0000000
+Presolve time: 0.00s
+Presolved: 1 rows, 10 columns, 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+
+Root relaxation: objective 6.587500e+01, 1 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   65.87500    0    1   65.00000   65.87500  1.35%     -    0s
+Optimal solution found at node 0 - now completing solution pool...
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     2   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+
+Cutting planes:
+  Cover: 1
+
+Explored 72 nodes (46 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 21: 65 65 64 ... 59
+No other solutions better than -1e+100
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.500000000000e+01, best bound 6.500000000000e+01, gap 0.0000%
+Changed value of parameter PoolSolutions to 1024
+   Prev: 10  Min: 1  Max: 2000000000  Default: 10
+Changed value of parameter PoolGap to 0.1
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Changed value of parameter PoolSearchMode to 2
+   Prev: 0  Min: 0  Max: 2  Default: 0
+Optimize a model with 1 rows, 10 columns and 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 2e+01]
+  Objective range  [1e+00, 3e+01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e+01, 3e+01]
+Found heuristic solution: objective 65.0000000
+Presolve time: 0.00s
+Presolved: 1 rows, 10 columns, 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+
+Root relaxation: objective 6.587500e+01, 1 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   65.87500    0    1   65.00000   65.87500  1.35%     -    0s
+Optimal solution found at node 0 - now completing solution pool...
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     2   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+
+Cutting planes:
+  Cover: 1
+
+Explored 72 nodes (46 simplex iterations) in 0.02 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 21: 65 65 64 ... 59
+No other solutions better than -1e+100
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.500000000000e+01, best bound 6.500000000000e+01, gap 0.0000%
+Changed value of parameter PoolSolutions to 1024
+   Prev: 10  Min: 1  Max: 2000000000  Default: 10
+Changed value of parameter PoolGap to 0.1
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Changed value of parameter PoolSearchMode to 2
+   Prev: 0  Min: 0  Max: 2  Default: 0
+Optimize a model with 1 rows, 10 columns and 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 2e+01]
+  Objective range  [1e+00, 3e+01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e+01, 3e+01]
+Found heuristic solution: objective 65.0000000
+Presolve time: 0.00s
+Presolved: 1 rows, 10 columns, 10 nonzeros
+Variable types: 0 continuous, 10 integer (10 binary)
+
+Root relaxation: objective 6.587500e+01, 1 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   65.87500    0    1   65.00000   65.87500  1.35%     -    0s
+Optimal solution found at node 0 - now completing solution pool...
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     0   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+     0     2   65.00000    0    1   65.00000   65.00000  0.00%     -    0s
+
+Cutting planes:
+  Cover: 1
+
+Explored 72 nodes (46 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 21: 65 65 64 ... 59
+No other solutions better than -1e+100
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.500000000000e+01, best bound 6.500000000000e+01, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+
+Gurobi 8.1.1 (win64, Python) logging started 08/31/20 16:21:09
+
+Academic license - for non-commercial use only
+
+Gurobi 8.1.1 (win64, Python) logging started 09/01/20 21:13:31
+
+Academic license - for non-commercial use only
+
+Gurobi 8.1.1 (win64, Python) logging started 09/01/20 21:14:49
+
+Academic license - for non-commercial use only
+
+Gurobi 8.1.1 (win64, Python) logging started 09/01/20 21:19:34
+
+Academic license - for non-commercial use only
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored

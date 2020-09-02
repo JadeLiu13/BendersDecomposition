@@ -70,13 +70,60 @@ def solveModelGurobi():
     m2.optimize()
     xVal= [x[j].x for j in range(F)]
     yVal =[y[i, j].x for i in range(C) for j in range(F)]
-    return m2.objVal + sum([xVal[j] * f[j] for j in range(F)]), xVal, yVal
+    return m2.objVal, xVal, yVal
 
 
 
 def updateCorePoint(x, corePoint):
     return [0.5*(x[j] + corePoint[j]) for j in range(F)]
+
+
+def highDensityParetoSubProblem(x, sigma):
+    m1 = Model()
+    y = {(i, j):  m1.addVar(lb=0, vtype=GRB.CONTINUOUS) for i in range(C) for j in range(F)}
+    xi = m1.addVar(lb=-GRB.INFINITY, vtype=GRB.CONTINUOUS)
+    constrMu = {}
+    constrNu = {}
+    for i in range(C):
+        constrMu[i] = m1.addConstr(sum([y[i, j] for j in range(F)]) + xi == 1)
     
+    for j in range(F):
+        for i in range(C):
+            constrNu[i, j] = m1.addConstr(y[i, j] + xi * x[j] * bigM  <= 1 / bigM)
+
+    obj = sum([p[i, j] * y[i, j]  for j in range(F) for i in range(C)]) + xi *(sigma+sum([f[j] * x[j] for j in range(F)])) - sum([f[j] * x[j] for j in range(F)])
+
+    m1.setObjective(obj, sense=GRB.MAXIMIZE)
+
+    m1.update()
+    m1.Params.OutputFlag = 0
+    m1.Params.InfUnbdInfo = 1
+    m1.Params.DualReductions = 0
+
+    m1.optimize()
+
+    if m1.status == GRB.OPTIMAL:
+        mu = {}
+        nu = {}
+        for i in range(C):
+            mu[i] = constrMu[i].pi
+        for j in range(F):
+            for i in range(C):
+                nu[i, j] = constrNu[i, j].pi
+        return m1.objVal, mu, nu, [y[i, j].x for i in range(C) for j in range(F)], m1.status
+    else:
+        mu = {}
+        nu = {}
+        for i in range(C):
+            mu[i] = constrMu[i].FarkasDual
+        for j in range(F):
+            for i in range(C):
+                nu[i, j] = constrNu[i, j].FarkasDual
+        return -float("inf"), mu, nu, [], m1.status
+
+
+
+
     
 def paretoSubProblem(x, sigma, corePoint):
     m1 = Model()
@@ -89,7 +136,7 @@ def paretoSubProblem(x, sigma, corePoint):
     
     for j in range(F):
         for i in range(C):
-            constrNu[i, j] = m1.addConstr(y[i, j] + xi * x[j]  <= bigM*corePoint[j])
+            constrNu[i, j] = m1.addConstr(y[i, j] + xi * x[j] *bigM  <= bigM*corePoint[j])
 
     obj = sum([p[i, j] * y[i, j]  for j in range(F) for i in range(C)]) + xi *(sigma+sum([f[j] * x[j] for j in range(F)])) - sum([f[j] * x[j] for j in range(F)])
 
@@ -262,6 +309,57 @@ def solveUFLBendersPareto(eps, x_initial, maxit, verbose=0):
     return x, y, UB
 
 
+
+
+def solveUFLBendersHighDensityPareto(eps, x_initial, maxit, verbose=0):
+    UB = float("inf")
+    LB = -float("inf")
+    optCuts_mu = []
+    optCuts_nu = []
+    fesCuts_mu = []
+    fesCuts_nu = []
+    tol = float("inf")
+    it = 0
+    x = x_initial
+    cp = corePoint
+    m = setupMasterProblemModel()
+
+    while eps < tol  and it < maxit :
+        ob, mu, nu, y, status = subProblem(x)
+        LB = max(LB, ob)
+        if status == 2:
+            #print(status, "optimality")
+            #cp = updateCorePoint(x, cp)
+            obp, mu, nu, y, status = highDensityParetoSubProblem(x, ob)
+            obj, x, eta, m = solveMaster(m, mu, nu, [], [])
+        else:
+            #print(status, "feasibility")
+            obj, x, eta, m = solveMaster(m,  [], [], mu, nu)
+        
+        UB = min(UB, obj)
+        tol = UB - LB
+        it += 1
+        if verbose == 1:            
+            print('----------------------iteration '  + str(it) +'-------------------' )
+            print ('LB = ', LB, ', UB = ', UB, ', tol = ', tol)
+            if len([k for k in range(F) if round(x[k]) != 0]) != 0:
+                print('Opened Facilities: \t ', [k for k in range(F) if round(x[k]) != 0])
+            else:
+                print('No open facilities')
+            
+            '''
+            print('Assignment....')
+            for i in range(C):
+                print('Customer \t | \t Facility')
+                print(str(i)+ '\t | \t ' + str([k for k in for j in range(F) for i in range(C) if y[0] == i and y[k] == 1][0]))
+            print(LB, UB, tol, x, it)
+            '''
+        else:
+            continue
+    return x, y, UB
+
+
+
 def checkGurobiBendersSimilarity(xb, yb, xg, yg):
     ind = 0
     for j in range(F):
@@ -285,8 +383,13 @@ corePoint = np.ones(F)
 x_initial[1] = 1
 corePoint[2] = 0
 start = time.time()
-xb, yb, obb = solveUFLBendersPareto(100, x_initial, 1000, 0)
+xb, yb, obb = solveUFLBendersPareto(0, x_initial, 1000, 1)
 print("Benders with pareto Optimal cuts took ...", round(time.time() - start, 1), "seconds")
+start = time.time()
+
+xh, yh, obh = solveUFLBendersHighDensityPareto(0, x_initial, 1000, 1)
+print("Benders with high density pareto Optimal cuts took ...", round(time.time() - start, 1), "seconds")
+
 start = time.time()
 obg, xg, yg = solveModelGurobi()
 print("Gurobi took...", round(time.time() - start, 2), "seconds")

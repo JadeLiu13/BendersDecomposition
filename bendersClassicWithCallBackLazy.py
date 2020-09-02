@@ -34,7 +34,7 @@ def generateFacilityLocationData(C, F):
 
 # Step 1: Initialize variables
 C = 100
-F = 10
+F = 50
 
 
 
@@ -68,7 +68,7 @@ def solveModelGurobi():
     m2.optimize()
     xVal= [x[j].x for j in range(F)]
     yVal =[y[i, j].x for i in range(C) for j in range(F)]
-    return m2.objVal + sum([xVal[j] * f[j] for j in range(F)]), xVal, yVal
+    return m2.objVal, xVal, yVal
 
 
 def subProblem(x):
@@ -267,7 +267,7 @@ def checkGurobiBendersSimilarity(xb, yb, xg, yg):
         print('Solution obtained from both methods are different!!')
 
 
-bigM = 1
+bigM = 100000
 x_initial = np.ones(F)
 x_initial[1] = 1
 x_initial[2] = 0

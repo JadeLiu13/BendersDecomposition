@@ -34,7 +34,7 @@ def generateFacilityLocationData(C, F):
 
 # Step 1: Initialize variables
 C = 100
-F = 50
+F = 25
 
 
 
@@ -125,6 +125,15 @@ def setupMasterProblemModel():
     m.update()
     m.Params.OutputFlag = 0
     m.Params.lazyConstraints = 1
+    
+    # Limit how many solutions to collect
+    m.setParam(GRB.Param.PoolSolutions, 50)
+    # Limit the search space by setting a gap for the worst possible solution
+    # that will be accepted
+    m.setParam(GRB.Param.PoolGap, 0.8)
+    # do a systematic search for the k-best solutions
+    m.setParam(GRB.Param.PoolSearchMode, 2)
+
     return m
 
 def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
@@ -132,29 +141,41 @@ def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
     '''
     Adding optimality cut
     '''
-    
-    if len(optCuts_nu) != 0:            
-        tot = sum(optCuts_mu.values())    
-        for j in range(F):
-            for i in range(C):
-                tot += optCuts_nu[i, j]*m.getVarByName(str(j))*bigM
-    
-        m.addConstr(m.getVarByName('eta') <= tot)
-    '''
+    for mu in range(len(optCuts_nu)):            
+        if len(optCuts_mu[mu]) != 0:            
+            tot = sum(optCuts_mu[mu].values())    
+            for j in range(F):
+                for i in range(C):
+                    tot += optCuts_nu[mu][i, j]*m.getVarByName(str(j))*bigM        
+            m.addConstr(m.getVarByName('eta') <= tot)
+        '''
     Adding feasibility cut
     '''
-    if len(fesCuts_mu) != 0:            
-        tot = sum(fesCuts_mu.values())
-        for j in range(F):
-            for i in range(C):
-                tot += fesCuts_nu[i, j] * m.getVarByName(str(j))* bigM
-        m.addConstr (tot >= 0)
+    for mu in range(len(fesCuts_mu)):    
+        if len(fesCuts_mu[mu]) != 0:            
+            tot = sum(fesCuts_mu[mu].values())
+            for j in range(F):
+                for i in range(C):
+                    tot += fesCuts_nu[mu][i, j] * m.getVarByName(str(j))* bigM
+            m.addConstr (tot >= 0)
     
 
     
     m.optimize()
+      
+    
+    
     if m.status == GRB.OPTIMAL:
-        return m.objVal, [m.getVarByName(str(k)).x for k in range(F)], m.getVarByName('eta'), m
+        nSolutions = m.SolCount     # Print number of solutions stored
+        optSol = [round(m.getVarByName(str(k)).x) for k in range(F)]
+        otherSols = [optSol]
+        if (nSolutions >= 2):
+            for solNum in range(nSolutions - 1):                    
+                m.setParam(GRB.Param.SolutionNumber, solNum+1)
+                sol = [round(m.getVarByName(str(k)).Xn) for k in range(F)]
+                if sol not in otherSols:
+                    otherSols.append(sol)   
+        return m.objVal, optSol, m.getVarByName('eta'), m, otherSols
     else:
         print("Sth went wrong in the master problem and it is ", m.status)
 
@@ -162,7 +183,7 @@ def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
 
 
 
-def solveUFLBenders(eps, x_initial, maxit, verbose=0):
+def solveUFLBendersMultipleCuts(eps, x_initial, maxit, verbose=0):
     UB = float("inf")
     LB = -float("inf")
     optCuts_mu = []
@@ -173,18 +194,35 @@ def solveUFLBenders(eps, x_initial, maxit, verbose=0):
     it = 0
     x = x_initial
     m = setupMasterProblemModel()
-
-    while eps < tol  and it < maxit :
-        ob, mu, nu, y, status = subProblem(x)
-        LB = max(LB, ob)
-        if status == 2:
-            #print(status, "optimality")
-            obj, x, eta, m = solveMaster(m, mu, nu, [], [])
-        else:
-            #print(status, "feasibility")
-            obj, x, eta, m = solveMaster(m,  [], [], mu, nu)
-        
+    solutions = [x]
+    solutionsEverFound = [list(x)]
+    while eps <= tol  and it < maxit :
+        muCutsOpt = []
+        nuCutsOpt = []
+        muCutsFeas = []
+        nuCutsFeas = []
+        for s in solutions:
+            ob, mu, nu, y, status = subProblem(s)
+            LB = max(LB, ob)
+            if status == 2:                    
+                muCutsOpt.append(mu)
+                nuCutsOpt.append(nu)
+            else:
+                muCutsFeas.append(mu)
+                nuCutsFeas.append(nu)
+                
+        obj, x, eta, m, otherSol = solveMaster(m, muCutsOpt, nuCutsOpt, muCutsFeas, nuCutsFeas)
         UB = min(UB, obj)
+        solutions = []
+        for sol in otherSol:
+            if sol not in solutionsEverFound:
+                solutions.append(sol)
+                solutionsEverFound.append(sol)     
+                
+        
+                            
+        print(len(solutions))
+        
         tol = UB - LB
         it += 1
         if verbose == 1:            
@@ -230,7 +268,7 @@ x_initial = np.zeros(F)
 x_initial[1] = 1
 x_initial[2] = 0
 start = time.time()
-xb, yb, obb = solveUFLBenders(100, x_initial, 1000, 1)
+xb, yb, obb = solveUFLBendersMultipleCuts(1, x_initial, 1000, 1)
 print("Benders took...", round(time.time() - start, 2), "seconds")
 start = time.time()
 obg, xg, yg = solveModelGurobi()

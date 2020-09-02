@@ -34,7 +34,7 @@ def generateFacilityLocationData(C, F):
 
 # Step 1: Initialize variables
 C = 100
-F = 10
+F = 25
 
 
 
@@ -68,7 +68,7 @@ def solveModelGurobi():
     m2.optimize()
     xVal= [x[j].x for j in range(F)]
     yVal =[y[i, j].x for i in range(C) for j in range(F)]
-    return m2.objVal + sum([xVal[j] * f[j] for j in range(F)]), xVal, yVal
+    return m2.objVal, xVal, yVal
 
 
 def subProblem(x):
@@ -281,7 +281,7 @@ x_initial = np.ones(F)
 x_initial[1] = 1
 x_initial[2] = 0
 start = time.time()
-xb, yb, obb = bendersDisaggCuts(0, x_initial, 1000, 0)
+xb, yb, obb = bendersDisaggCuts(0, x_initial, 1000, 1)
 print("Benders with disaggregated cuts took...", round(time.time() - start, 2), "seconds")
 start = time.time()
 xc, yc, obcb = runCallBackBendersDisagg()  
