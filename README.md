@@ -81,3 +81,10 @@ for solving the problem using Benders Decomposition. It returns the optimal valu
  ```
  
  This method significantly reduces the number of master problem iterations but with increasing number of cuts, the master problem takes longer time to solve. 
+ 
+### 6. bendersMultipleDisaggCuts.py
+This script utilizes both multiple cuts and disaggregated cuts to reduce the computational time. This script performs the best among all in terms of computational time. 
+
+  ```
+ bendersDisaggCuts(tol, x_initial, maxIter, verbose)
+ ```

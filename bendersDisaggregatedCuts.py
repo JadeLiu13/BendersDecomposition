@@ -34,7 +34,7 @@ def generateFacilityLocationData(C, F):
 
 # Step 1: Initialize variables
 C = 100
-F = 25
+F = 100
 
 
 
@@ -276,12 +276,12 @@ def checkGurobiBendersSimilarity(xb, yb, xg, yg):
         print('Solution obtained from both methods are different!!')
 
 
-bigM = 100000
+bigM = 1
 x_initial = np.ones(F)
 x_initial[1] = 1
 x_initial[2] = 0
 start = time.time()
-xb, yb, obb = bendersDisaggCuts(0, x_initial, 1000, 1)
+xb, yb, obb = bendersDisaggCuts(0, x_initial, 1000, 0)
 print("Benders with disaggregated cuts took...", round(time.time() - start, 2), "seconds")
 start = time.time()
 xc, yc, obcb = runCallBackBendersDisagg()  

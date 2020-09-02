@@ -118,10 +118,10 @@ def subProblem(x):
 
 def setupMasterProblemModel():
     m = Model()
-    eta =  m.addVar(vtype=GRB.CONTINUOUS, name ='eta')
+    eta = {i: m.addVar(vtype=GRB.CONTINUOUS, ub = 1e5, name ='eta_' + str(i)) for i in range(C)}  
     x = {j: m.addVar(lb=0, vtype=GRB.BINARY, name = str(j)) for j in range(F)}
     
-    m.setObjective(eta -sum([f[j] * x[j] for j in range(F)]), sense=GRB.MAXIMIZE)
+    m.setObjective(sum([eta[i] for i in range(C)]) -sum([f[j] * x[j] for j in range(F)]), sense=GRB.MAXIMIZE)
     m.update()
     m.Params.OutputFlag = 0
     m.Params.lazyConstraints = 1
@@ -142,22 +142,23 @@ def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
     Adding optimality cut
     '''
     for mu in range(len(optCuts_nu)):            
-        if len(optCuts_mu[mu]) != 0:            
-            tot = sum(optCuts_mu[mu].values())    
-            for j in range(F):
-                for i in range(C):
+        if len(optCuts_mu[mu]) != 0:   
+            for i in range(C):
+                tot = optCuts_mu[mu][i]
+                #tot = sum(optCuts_mu[mu].values())    
+                for j in range(F):
                     tot += optCuts_nu[mu][i, j]*m.getVarByName(str(j))*bigM        
-            m.addConstr(m.getVarByName('eta') <= tot)
+                m.addConstr(m.getVarByName('eta_' + str(i)) <= tot)
         '''
     Adding feasibility cut
     '''
     for mu in range(len(fesCuts_mu)):    
-        if len(fesCuts_mu[mu]) != 0:            
-            tot = sum(fesCuts_mu[mu].values())
-            for j in range(F):
-                for i in range(C):
+        if len(fesCuts_mu[mu]) != 0:     
+            for i in range(C):
+                tot = fesCuts_mu[mu][i]
+                for j in range(F):
                     tot += fesCuts_nu[mu][i, j] * m.getVarByName(str(j))* bigM
-            m.addConstr (tot >= 0)
+                m.addConstr (tot >= 0)
     
 
     
@@ -183,7 +184,7 @@ def solveMaster(m,  optCuts_mu, optCuts_nu, fesCuts_mu, fesCuts_nu):
 
 
 
-def solveUFLBendersMultipleCuts(eps, x_initial, maxit, verbose=0):
+def solveUFLBendersMultipleDisaggCuts(eps, x_initial, maxit, verbose=0):
     UB = float("inf")
     LB = -float("inf")
     optCuts_mu = []
@@ -263,12 +264,12 @@ def checkGurobiBendersSimilarity(xb, yb, xg, yg):
         print('Solution obtained from both methods are different!!')
 
 
-bigM = 100000
+bigM = 1
 x_initial = np.zeros(F)
 x_initial[1] = 1
 x_initial[2] = 0
 start = time.time()
-xb, yb, obb = solveUFLBendersMultipleCuts(1, x_initial, 1000, 1)
+xb, yb, obb = solveUFLBendersMultipleDisaggCuts(1, x_initial, 1000, 0)
 print("Benders took...", round(time.time() - start, 2), "seconds")
 start = time.time()
 obg, xg, yg = solveModelGurobi()
